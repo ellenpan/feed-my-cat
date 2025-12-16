@@ -1,0 +1,1006 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <title>feed my cat</title>
+  <style>
+    body { 
+      margin: 0; 
+      overflow: hidden; 
+      background: #45a1a1;
+      font-family: Arial, sans-serif;
+    }
+
+    #title {
+      position: fixed;
+      top: 15px;
+      width: 100%;
+      text-align: center;
+      font-size: 28px;
+      color: black;
+      text-transform: lowercase;
+      pointer-events: none;
+      z-index: 10;
+    }
+
+    #buttons {
+      position: fixed;
+      bottom: 40px;
+      width: 100%;
+      display: flex;
+      justify-content: center;
+      gap: 40px;
+      z-index: 20; 
+    }
+
+    button {
+      padding: 12px 24px;
+      font-size: 18px;
+      border: 2px solid black;
+      background: white;
+      cursor: pointer;
+      border-radius: 6px;
+    }
+
+    button:hover {
+      background: #eee;
+    }
+
+    .confirmButton:hover {
+      background-image: url("../images/click.png"); /* keep same background */
+      background-repeat: no-repeat;
+      background-size: 100% 100%;
+      background-color: transparent;  /* cancel white background */
+      filter: none;                    /* no brightness change */
+    }
+
+
+    /* draggable windows/icons */
+    #bgImage {
+      position: fixed;
+      top: 48%;
+      left: 47%;
+      transform: translate(-50%, -50%);
+      width: 580px;
+      opacity: 1.0;
+      z-index: 12; /* below cat canvas, above food canvas */
+    }
+
+    #leaderImage {
+      position: fixed;
+      top: 50%;
+      left: 20%;
+      transform: translate(-50%, -70%);
+      width: 200px;
+      opacity: 1.0;
+      z-index: 18; /* topmost requested */
+    }
+
+    #exeImage {
+      position: fixed;
+      top: 79%;
+      left: 60%;
+      transform: translate(-50%, -70%);
+      width: 300px;
+      opacity: 1.0;
+      z-index: 19; /* below exeButtons, above cat canvas */
+    }
+
+    #explorer {
+      position: fixed;
+      top: 23%;
+      left: 5%;
+      transform: translate(-50%, -50%);
+      width: 50px;
+      opacity: 1.0;
+      z-index: 5;
+      pointer-events: none;
+    }
+
+    #pc {
+      position: fixed;
+      top: 8%;
+      left: 5%;
+      transform: translate(-50%, -50%);
+      width: 80px;
+      opacity: 1.0;
+      z-index: 5;
+      pointer-events: none;
+    }
+
+    #bin {
+      position: fixed;
+      top: 38%;
+      left: 5%;
+      transform: translate(-50%, -50%);
+      width: 80px;
+      opacity: 1.0;
+      z-index: 5;
+      pointer-events: none;
+    }
+
+    #foodImage {
+      position: fixed;
+      top: 68%;
+      left: 85%;
+      transform: translate(-50%, -50%);
+      width: 215px;
+      opacity: 1.0;
+      z-index: 16; 
+    }
+
+    /* Both canvases share basic behavior */
+    canvas {
+      position: fixed;
+      top: 0;
+      left: 0;
+      pointer-events: none; /* let clicks go to images/buttons */
+    }
+
+    
+    #catCanvas {
+      z-index: 15;
+    }
+
+    
+    #foodCanvas {
+      z-index: 17
+    }
+
+    @font-face {
+      font-family: "w95fa";
+      src: url("fonts/w95fa.otf") format("opentype");
+      font-weight: normal;
+      font-style: normal;
+    }
+
+    #ieLabel {
+      position: fixed;
+      top: 190px;
+      left: 28px;
+      font-family: "w95fa", Arial, sans-serif;
+      font-size: 16px;
+      color: white;
+      z-index: 4;
+      pointer-events: none;
+    }
+
+    #pcLabel {
+      position: fixed;
+      top: 90px;
+      left: 36px;
+      font-family: "w95fa", Arial, sans-serif;
+      font-size: 16px;
+      color: white;
+      z-index: 4;
+      pointer-events: none;
+    }
+
+    #binLabel {
+      position: fixed;
+      top: 305px;
+      left: 40px;
+      font-family: "w95fa", Arial, sans-serif;
+      font-size: 16px;
+      color: white;
+      z-index: 4;
+      pointer-events: none;
+    }
+
+    .exeButtons {
+      position: fixed;
+      z-index: 20; 
+
+      width: 100px;
+      height: 40px;
+
+      background-image: url("../images/click.png");
+      background-repeat: no-repeat;
+      background-size: 100% 100%;
+      border: none;
+      border-radius: 0;
+      padding: 0;
+      cursor: pointer;
+
+      font-family: "w95fa", Arial, sans-serif;
+      font-size: 16px;
+      color: black;
+    }
+
+    .exeButtons:hover {
+      background-image: url("../images/click.png");
+      background-repeat: no-repeat;
+      background-size: 100% 100%;
+      filter: none;
+    }
+
+    /* initial positions for feed & pet; JS will keep them attached to exeImage */
+    #feedBtn {
+      top: 77%;
+      left: 60%;
+      transform: translate(-110%, -50%);
+    }
+
+    #petBtn {
+      top: 77%;
+      left: 60%;
+      transform: translate(10%, -50%);
+    }
+
+    #startbar {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      height: auto;
+      z-index: 2;  /* near bottom */
+      pointer-events: none;
+    }
+
+    #clock {
+      position: fixed;
+      bottom: 10px;            /* slightly above bottom of startbar */
+      right: 21px;             /* right-aligned like Win95 */
+      font-family: "w95fa", Arial, sans-serif;
+      font-size: 18px;
+      color: black;
+      background: transparent;
+      z-index: 25;             /* above startbar, below leader/exeButtons if overlapping */
+      pointer-events: none;    /* no interference with UI */
+    }
+
+    #namePopup {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      z-index: 9999;      /* highest element */
+      pointer-events: auto;
+    }
+
+    #nameImage {
+      width: 500px;       /* adjust to match your PNG */
+      display: block;
+    }
+
+    #nameInputWrapper {
+      position: absolute;
+      top: 57%;
+      left: 18%;
+      transform: translateY(-50%);   /* stop horizontal centering */
+      font-family: "w95fa";
+      font-size: 20px;
+      color: black;
+      white-space: nowrap;
+      text-align: left;               /* ensure growth is rightward */
+    }
+
+
+    #cursor {
+      animation: blink 1s step-start infinite;
+    }
+
+    @keyframes blink {
+      50% { opacity: 0; }
+    }
+
+    .confirmButton {
+      position: absolute;
+      bottom: 25px;      /* aligns to bottom-right of name.png */
+      right: 35px;
+      width: 120px;
+      height: 45px;
+      background-image: url("../images/click.png");
+      background-size: 100% 100%;
+      background-repeat: no-repeat;
+      border: none;
+      font-family: "w95fa";
+      font-size: 18px;
+      color: black;
+      cursor: pointer;
+      border-radius: 0;
+    }
+
+    .confirmButton:active {
+      background-image: url("../images/pressed_button.png");
+    }
+
+    #leaderText {
+      position: fixed;
+      transform: translate(-63%, -28%); /* remain centered relative to JS position */
+      font-family: "w95fa", Arial, sans-serif;
+      font-size: 11pt;
+      color: rgb(188, 188, 188);
+      text-align: left;
+      line-height: 1.2;
+      z-index: 19;
+      pointer-events: none;
+    }
+
+
+
+
+  </style>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
+</head>
+<body>
+
+  <div id="ieLabel">Internet Explorer</div>
+  <div id="pcLabel">My Computer</div>
+  <div id="binLabel">Recycle Bin</div>
+
+  <img id="bgImage" src="../images/feed_my_cat.png" alt="">
+  <img id="exeImage" src="../images/exe.png" alt="">
+  <img id="leaderImage" src="../images/leaderboard.png" alt="">
+  <img id="explorer" src="../images/explorer.png" alt="">
+  <img id="pc" src="../images/pc.png" alt="">
+  <img id="bin" src="../images/bin.png" alt="">
+  <img id="foodImage" src="../images/cat_food.png" alt="">
+  <img id="startbar" src="../images/startbar.png" alt="">
+
+  <div id="buttons">
+    <button id="feedBtn" class="exeButtons">feed</button>
+    <button id="petBtn" class="exeButtons">pet</button>
+  </div>
+
+  <div id="clock"></div>
+
+  <!-- NAME ENTRY POPUP -->
+  <div id="namePopup">
+    <img id="nameImage" src="../images/name.png" alt="name window">
+
+    <div id="nameInputWrapper">
+      <span id="typedName"></span>
+      <span id="cursor">|</span>
+    </div>
+
+    <button id="confirmNameBtn" class="confirmButton">confirm</button>
+  </div>
+
+  <div id="leaderText">
+    <div>daily leaderboard</div>
+    <div>--------------------</div>
+    <div>1. <span id="lbName">(user's name)</span></div>
+    <div>2. idk how to</div>
+    <div>3. make a</div>
+    <div>4. leaderboard yet</div>
+    <div>5. sry</div>
+    <div>--------------------</div>
+    <div>total pets: <span id="lbPets">0</span></div>
+    <div>total feeds: <span id="lbFeeds">0</span></div>
+  </div>
+
+
+  <script>
+    // ---------------------------------------------------------------
+    // Renderers & Canvases
+    // ---------------------------------------------------------------
+    const rendererCat = new THREE.WebGLRenderer({ antialias: false, alpha: true });
+    rendererCat.setSize(window.innerWidth, window.innerHeight);
+    rendererCat.setPixelRatio(window.devicePixelRatio);
+    rendererCat.domElement.id = "catCanvas";
+    document.body.appendChild(rendererCat.domElement);
+
+    const rendererFood = new THREE.WebGLRenderer({ antialias: false, alpha: true });
+    rendererFood.setSize(window.innerWidth, window.innerHeight);
+    rendererFood.setPixelRatio(window.devicePixelRatio);
+    rendererFood.domElement.id = "foodCanvas";
+    document.body.appendChild(rendererFood.domElement);
+
+    // ------------------------------
+    // NAME POPUP DAILY CHECK
+    // ------------------------------
+    function shouldShowNamePopup() {
+      const savedName = localStorage.getItem("savedName");
+      const savedDate = localStorage.getItem("savedNameDate");
+
+      const today = new Date().toISOString().split("T")[0]; // YYYY-MM-DD
+
+      // If no name or no date saved → show popup
+      if (!savedName || !savedDate) return true;
+
+      // If date is different → ask again
+      if (savedDate !== today) return true;
+
+      // Otherwise do not show popup
+      return false;
+    }
+
+
+    // ---------------------------------------------------------------
+    // Scenes & Cameras
+    // ---------------------------------------------------------------
+    const sceneCat = new THREE.Scene();
+    sceneCat.background = null;
+
+    const sceneFood = new THREE.Scene();
+    sceneFood.background = null;
+
+    const cameraCat = new THREE.PerspectiveCamera(
+      45,
+      window.innerWidth / window.innerHeight,
+      0.1,
+      100
+    );
+    cameraCat.position.set(0, 0.5, 5); // height 0.5
+    cameraCat.lookAt(0, 0, 0);
+
+    const cameraFood = new THREE.PerspectiveCamera(
+      45,
+      window.innerWidth / window.innerHeight,
+      0.1,
+      100
+    );
+    cameraFood.position.set(0, 0, 5); // height 0
+    cameraFood.lookAt(0, 0, 0);
+
+    // ---------------------------------------------------------------
+    // Lighting — flat, even
+    // ---------------------------------------------------------------
+    sceneCat.add(new THREE.AmbientLight(0xffffff, 1));
+    sceneFood.add(new THREE.AmbientLight(0xffffff, 1));
+
+    // ---------------------------------------------------------------
+    // GLTF Loader and Models
+    // ---------------------------------------------------------------
+    const loader = new THREE.GLTFLoader();
+
+    let modelCat = null;
+    let modelFood = null;
+
+    // Totals (persisted per browser via localStorage)
+    let totalPets  = parseInt(localStorage.getItem("totalPets")  || "0", 10);
+    let totalFeeds = parseInt(localStorage.getItem("totalFeeds") || "0", 10);
+
+    // Simple helper to update the leaderboard text
+    function updateLeaderboardDisplay() {
+      const nameSpan  = document.getElementById("lbName");
+      const petsSpan  = document.getElementById("lbPets");
+      const feedsSpan = document.getElementById("lbFeeds");
+
+      if (!nameSpan || !petsSpan || !feedsSpan) return;
+
+      const savedName = localStorage.getItem("savedName");
+      const displayName =
+        savedName && savedName.trim() !== "" ? savedName : "(user's name)";
+
+      nameSpan.textContent  = displayName;
+      petsSpan.textContent  = totalPets;
+      feedsSpan.textContent = totalFeeds;
+    }
+
+    
+
+
+    function loadModel(path) {
+      return new Promise(resolve => {
+        loader.load(path, gltf => resolve(gltf.scene));
+      });
+    }
+
+    const baseCatRotationY = -Math.PI / 5;
+    let catBody = null; // part of cat to fatten
+
+    async function initModels() {
+      // Cat
+      modelCat = await loadModel("cat.glb");
+
+      console.log("CAT MODEL HIERARCHY:");
+      modelCat.traverse(obj => console.log(obj.name));
+
+      modelCat.scale.setScalar(0.5);
+      modelCat.position.set(0, 0, 0);
+      modelCat.rotation.y = baseCatRotationY;
+      modelCat.visible = true;
+      sceneCat.add(modelCat);
+
+      // Identify CAT body mesh (by name from your GLB)
+      modelCat.traverse(obj => {
+        if (obj.name === "CAT001") {
+          catBody = obj;
+          window.catBody = obj; // keep for debugging / feed
+        }
+      });
+
+      // Food
+      modelFood = await loadModel("cat_food.glb");
+      modelFood.scale.setScalar(0.15);
+      modelFood.position.set(0, 0, 0);
+      sceneFood.add(modelFood);
+    }
+
+    initModels();
+
+    // rotate food 15deg every 0.5s
+    setInterval(() => {
+      if (modelFood) {
+        modelFood.rotation.y += (15 * Math.PI) / 180;
+      }
+    }, 500);
+
+    // ---------------------------------------------------------------
+    // Pixelation for both canvases
+    // ---------------------------------------------------------------
+    let pixelSize = 2; // fixed pixel amount
+    let rtCat, rtFood;
+
+    function rebuildRT() {
+      const w = Math.floor(window.innerWidth / pixelSize);
+      const h = Math.floor(window.innerHeight / pixelSize);
+
+      if (rtCat) rtCat.dispose();
+      if (rtFood) rtFood.dispose();
+
+      rtCat = new THREE.WebGLRenderTarget(w, h, {
+        minFilter: THREE.NearestFilter,
+        magFilter: THREE.NearestFilter,
+        depthBuffer: true
+      });
+
+      rtFood = new THREE.WebGLRenderTarget(w, h, {
+        minFilter: THREE.NearestFilter,
+        magFilter: THREE.NearestFilter,
+        depthBuffer: true
+      });
+    }
+
+    // ---------------------------------------------------------------
+    // Fullscreen Pixelation Quads
+    // ---------------------------------------------------------------
+    const fsSceneCat = new THREE.Scene();
+    const fsCameraCat = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
+    const quadCat = new THREE.Mesh(
+      new THREE.PlaneGeometry(2, 2),
+      new THREE.MeshBasicMaterial({ map: null })
+    );
+    fsSceneCat.add(quadCat);
+
+    const fsSceneFood = new THREE.Scene();
+    const fsCameraFood = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
+    const quadFood = new THREE.Mesh(
+      new THREE.PlaneGeometry(2, 2),
+      new THREE.MeshBasicMaterial({ map: null })
+    );
+    fsSceneFood.add(quadFood);
+
+    // ---------------------------------------------------------------
+    // Screen -> World helpers (one per camera)
+    // ---------------------------------------------------------------
+    function screenToWorldCat(x, y, zDistance = 4) {
+      const vec = new THREE.Vector3();
+      vec.set(
+        (x / window.innerWidth) * 2 - 1,
+        -(y / window.innerHeight) * 2 + 1,
+        0.5
+      );
+      vec.unproject(cameraCat);
+      const dir = vec.sub(cameraCat.position).normalize();
+      return cameraCat.position.clone().add(dir.multiplyScalar(zDistance));
+    }
+
+    function screenToWorldFood(x, y, zDistance = 4) {
+      const vec = new THREE.Vector3();
+      vec.set(
+        (x / window.innerWidth) * 2 - 1,
+        -(y / window.innerHeight) * 2 + 1,
+        0.5
+      );
+      vec.unproject(cameraFood);
+      const dir = vec.sub(cameraFood.position).normalize();
+      return cameraFood.position.clone().add(dir.multiplyScalar(zDistance));
+    }
+
+    // ---------------------------------------------------------------
+    // Keep 3D models & buttons attached to their DOM elements
+    // ---------------------------------------------------------------
+    let feedOffset = null;
+    let petOffset = null;
+
+    function initButtonOffsets() {
+      const exeImg = document.getElementById("exeImage");
+      const feedBtn = document.getElementById("feedBtn");
+      const petBtn = document.getElementById("petBtn");
+      if (!exeImg || !feedBtn || !petBtn) return;
+
+      const exeRect = exeImg.getBoundingClientRect();
+      const feedRect = feedBtn.getBoundingClientRect();
+      const petRect = petBtn.getBoundingClientRect();
+
+      const exeCenterX = exeRect.left + exeRect.width / 2;
+      const exeCenterY = exeRect.top + exeRect.height / 2;
+
+      const feedCenterX = feedRect.left + feedRect.width / 2;
+      const feedCenterY = feedRect.top + feedRect.height / 2;
+      const petCenterX = petRect.left + petRect.width / 2;
+      const petCenterY = petRect.top + petRect.height / 2;
+
+      feedOffset = {
+        x: feedCenterX - exeCenterX,
+        y: feedCenterY - exeCenterY
+      };
+      petOffset = {
+        x: petCenterX - exeCenterX,
+        y: petCenterY - exeCenterY
+      };
+    }
+
+    function updateAttachedElements() {
+      // Cat centered on bgImage
+      const bg = document.getElementById("bgImage");
+      if (bg && modelCat) {
+        const rect = bg.getBoundingClientRect();
+        const cx = rect.left + rect.width / 2;
+        const cy = rect.top + rect.height / 2;
+        const pos = screenToWorldCat(cx, cy, 4);
+        modelCat.position.copy(pos);
+      }
+
+      // Food centered on foodImage, slightly offset
+      const foodImg = document.getElementById("foodImage");
+      if (foodImg && modelFood) {
+        const rect = foodImg.getBoundingClientRect();
+        const cx = rect.left + rect.width / 2 - 10;
+        const cy = rect.top + rect.height / 2 + 110;
+        const pos = screenToWorldFood(cx, cy, 4);
+        pos.y += 0.3; // above PNG in 3D
+        modelFood.position.copy(pos);
+      }
+
+      // Leader text follows leaderImage
+      const leaderImg = document.getElementById("leaderImage");
+      const leaderText = document.getElementById("leaderText");
+
+      if (leaderImg && leaderText) {
+        const rect = leaderImg.getBoundingClientRect();
+        leaderText.style.left = rect.left + rect.width / 2 + "px";
+        leaderText.style.top  = rect.top  + rect.height / 2 + "px";
+      }
+
+
+      // Buttons attached to exeImage
+      const exeImg = document.getElementById("exeImage");
+      const feedBtn = document.getElementById("feedBtn");
+      const petBtn = document.getElementById("petBtn");
+      if (exeImg && feedBtn && petBtn && feedOffset && petOffset) {
+        const exeRect = exeImg.getBoundingClientRect();
+        const ex = exeRect.left + exeRect.width / 2;
+        const ey = exeRect.top + exeRect.height / 2;
+
+        // feed button
+        const feedCenterX = ex + feedOffset.x;
+        const feedCenterY = ey + feedOffset.y;
+        feedBtn.style.left = (feedCenterX - feedBtn.offsetWidth / 2 + 100) + "px";
+        feedBtn.style.top = (feedCenterY - feedBtn.offsetHeight / 2 + 20) + "px";
+
+        // pet button
+        const petCenterX = ex + petOffset.x;
+        const petCenterY = ey + petOffset.y;
+        petBtn.style.left = (petCenterX - petBtn.offsetWidth / 2) + "px";
+        petBtn.style.top = (petCenterY - petBtn.offsetHeight / 2 + 20) + "px";
+      }
+    }
+
+    // ---------------------------------------------------------------
+    // Gritty 0.1s Dragging System
+    // ---------------------------------------------------------------
+    let dragTarget = null;
+    let dragOffsetX = 0;
+    let dragOffsetY = 0;
+    let dragWidth = 0;
+    let dragHeight = 0;
+
+    let lastMouseX = 0;
+    let lastMouseY = 0;
+    let isDragging = false;
+
+    function makeDraggable(id) {
+      const el = document.getElementById(id);
+      if (!el) return;
+
+      // Normalize initial position
+      const rect = el.getBoundingClientRect();
+      el.style.position = "fixed";
+      el.style.top = rect.top + "px";
+      el.style.left = rect.left + "px";
+      el.style.transform = "none";
+
+      el.addEventListener("mousedown", (e) => {
+        e.preventDefault();
+        dragTarget = el;
+        const r = el.getBoundingClientRect();
+        dragWidth = r.width;
+        dragHeight = r.height;
+
+        dragOffsetX = e.clientX - r.left;
+        dragOffsetY = e.clientY - r.top;
+
+        isDragging = true;
+        lastMouseX = e.clientX;
+        lastMouseY = e.clientY;
+
+        document.addEventListener("mousemove", recordMouseMove);
+        document.addEventListener("mouseup", onDragEnd);
+      });
+    }
+
+    // Only RECORD mouse movement — DO NOT move the element yet
+    function recordMouseMove(e) {
+      lastMouseX = e.clientX;
+      lastMouseY = e.clientY;
+    }
+
+    // Update drag position every 0.1s (100ms)
+    setInterval(() => {
+      if (!isDragging || !dragTarget) return;
+
+      let newLeft = lastMouseX - dragOffsetX;
+      let newTop = lastMouseY - dragOffsetY;
+
+      const startbar = document.getElementById("startbar");
+      let maxTop = window.innerHeight - dragHeight;
+
+      if (startbar) {
+        const startRect = startbar.getBoundingClientRect();
+        maxTop = startRect.top - dragHeight; 
+      }
+
+      // Clamp within screen
+      if (newTop < 0) newTop = 0;
+      if (newTop > maxTop) newTop = maxTop;
+
+      const maxLeft = window.innerWidth - dragWidth;
+      if (newLeft < 0) newLeft = 0;
+      if (newLeft > maxLeft) newLeft = maxLeft;
+
+      dragTarget.style.left = newLeft + "px";
+      dragTarget.style.top = newTop + "px";
+
+    }, 100);  // <-- update interval (100ms)
+
+    // End dragging
+    function onDragEnd() {
+      isDragging = false;
+      dragTarget = null;
+      document.removeEventListener("mousemove", recordMouseMove);
+      document.removeEventListener("mouseup", onDragEnd);
+    }
+
+    // ---------------------------------------------------------------
+    // Button press visual state (click.png <-> pressed_button.png)
+    // ---------------------------------------------------------------
+    const NORMAL_BG = 'url("../images/click.png")';
+    const PRESSED_BG = 'url("../images/pressed_button.png")';
+
+    function setupButtonPress(id) {
+      const btn = document.getElementById(id);
+      if (!btn) return;
+
+      btn.addEventListener("mousedown", () => {
+        btn.style.backgroundImage = PRESSED_BG;
+      });
+
+      btn.addEventListener("mouseup", () => {
+        btn.style.backgroundImage = NORMAL_BG;
+      });
+
+      btn.addEventListener("mouseleave", () => {
+        btn.style.backgroundImage = NORMAL_BG;
+      });
+    }
+
+    // ---------------------------------------------------------------
+    // Mouse-based cat rotation (left/right based on X)
+    // ---------------------------------------------------------------
+    // Track where rotation *should* go
+    let targetCatRotation = baseCatRotationY;
+
+    window.addEventListener("mousemove", (e) => {
+      const xNorm = (e.clientX / window.innerWidth) * 2 - 1; // -1..1
+      const maxDelta = 0.6;
+      targetCatRotation = baseCatRotationY + xNorm * maxDelta;
+    });
+
+// Apply rotation 10 times per second (every 100ms)
+setInterval(() => {
+  if (modelCat) {
+    modelCat.rotation.y = targetCatRotation;
+  }
+}, 100);
+
+
+    // ---------------------------------------------------------------
+    // Resize Handler
+    // ---------------------------------------------------------------
+    window.addEventListener("resize", () => {
+      const w = window.innerWidth;
+      const h = window.innerHeight;
+
+      rendererCat.setSize(w, h);
+      rendererFood.setSize(w, h);
+
+      cameraCat.aspect = w / h;
+      cameraCat.updateProjectionMatrix();
+
+      cameraFood.aspect = w / h;
+      cameraFood.updateProjectionMatrix();
+
+      rebuildRT();
+    });
+
+    // ---------------------------------------------------------------
+    // Animation Loop
+    // ---------------------------------------------------------------
+    function animate() {
+      requestAnimationFrame(animate);
+
+      // keep 3D attached to DOM
+      updateAttachedElements();
+
+      // Cat canvas: pixelated
+      if (rtCat) {
+        rendererCat.setRenderTarget(rtCat);
+        rendererCat.render(sceneCat, cameraCat);
+
+        rendererCat.setRenderTarget(null);
+        quadCat.material.map = rtCat.texture;
+        quadCat.material.needsUpdate = true;
+        rendererCat.render(fsSceneCat, fsCameraCat);
+      }
+
+      // Food canvas: pixelated
+      if (rtFood) {
+        rendererFood.setRenderTarget(rtFood);
+        rendererFood.render(sceneFood, cameraFood);
+
+        rendererFood.setRenderTarget(null);
+        quadFood.material.map = rtFood.texture;
+        quadFood.material.needsUpdate = true;
+        rendererFood.render(fsSceneFood, fsCameraFood);
+      }
+    }
+
+    // ---------------------------------------------------------------
+    // Button Logic
+    // ---------------------------------------------------------------
+    document.getElementById("petBtn").onclick = () => {
+      if (!modelCat) return;
+
+      // count + save
+      totalPets++;
+      localStorage.setItem("totalPets", String(totalPets));
+      updateLeaderboardDisplay();
+
+      const originalYScale = modelCat.scale.y;
+      const originalYPos = modelCat.position.y;
+
+      const newScaleY = originalYScale * 0.6;
+      modelCat.scale.y = newScaleY;
+
+      modelCat.position.y = originalYPos + (originalYScale - newScaleY) / 2;
+
+      setTimeout(() => {
+        modelCat.scale.y = originalYScale;
+        modelCat.position.y = originalYPos;
+      }, 500);
+    };
+
+
+    document.getElementById("feedBtn").onclick = () => {
+      if (catBody) {
+        catBody.scale.x *= 1.02;
+      }
+
+      // count + save
+      totalFeeds++;
+      localStorage.setItem("totalFeeds", String(totalFeeds));
+      updateLeaderboardDisplay();
+    };
+
+
+    // ---------------------------------------------------------------
+    // Clock
+    // ---------------------------------------------------------------
+    function updateClock() {
+      const clockEl = document.getElementById("clock");
+      const now = new Date();
+
+      let hours = now.getHours();
+      let minutes = now.getMinutes().toString().padStart(2, "0");
+
+      const ampm = hours >= 12 ? "PM" : "AM";
+      hours = hours % 12;
+      if (hours === 0) hours = 12;
+
+      clockEl.textContent = hours + ":" + minutes + " " + ampm;
+    }
+
+    // update every second for perfect accuracy
+    setInterval(updateClock, 1000);
+    updateClock(); // initial
+
+
+    // update now & every minute
+    updateClock();
+    setInterval(updateClock, 60000);
+
+    // -------------------------------
+    // NAME ENTRY SYSTEM
+    // -------------------------------
+    let enteredName = "";
+    const maxNameLength = 10;
+
+    document.addEventListener("keydown", (e) => {
+      const popup = document.getElementById("namePopup");
+      if (!popup) return;  // popup removed already
+
+      if (e.key === "Backspace") {
+        enteredName = enteredName.slice(0, -1);
+      }
+      else if (e.key === "Enter") {
+        confirmName();
+        return;
+      }
+      else if (/^[A-Za-z0-9_]$/.test(e.key)) {
+        if (enteredName.length < maxNameLength) {
+          enteredName += e.key;
+        }
+      }
+
+      document.getElementById("typedName").textContent = enteredName;
+    });
+
+    function confirmName() {
+      if (enteredName.length === 0) return;
+
+      const today = new Date().toISOString().split("T")[0]; // YYYY-MM-DD
+
+      // save name + date
+      localStorage.setItem("savedName", enteredName);
+      localStorage.setItem("savedNameDate", today);
+
+      const btn = document.getElementById("confirmNameBtn");
+      btn.style.backgroundImage = 'url("../images/pressed_button.png")';
+
+      setTimeout(() => {
+        document.getElementById("namePopup").remove();
+        console.log("User name:", enteredName);
+      }, 500);
+    }
+
+
+    document.getElementById("confirmNameBtn").addEventListener("click", confirmName);
+
+
+    // ---------------------------------------------------------------
+    // Start
+    // ---------------------------------------------------------------
+    window.addEventListener("load", () => {
+      const popup = document.getElementById("namePopup");
+
+      if (popup) {
+        if (shouldShowNamePopup()) {
+          // First visit of the day (or no saved name/date)
+          popup.style.display = "block";
+        } else {
+          // Already entered name today → hide or remove
+          popup.style.display = "none"; // or popup.remove();
+        }
+      }
+
+      // Initialize UI stuff
+      updateLeaderboardDisplay();
+
+      ["bgImage", "leaderImage", "exeImage", "foodImage"].forEach(makeDraggable);
+      initButtonOffsets();
+      setupButtonPress("feedBtn");
+      setupButtonPress("petBtn");
+
+      rebuildRT();
+      animate();
+    });
+  </script>
+
+</body>
+</html>
