@@ -47,13 +47,12 @@
     }
 
     .confirmButton:hover {
-      background-image: url("../images/click.png"); /* keep same background */
+      background-image: url("images/click.png"); /* keep same background */
       background-repeat: no-repeat;
       background-size: 100% 100%;
       background-color: transparent;  /* cancel white background */
       filter: none;                    /* no brightness change */
     }
-
 
     /* draggable windows/icons */
     #bgImage {
@@ -137,12 +136,10 @@
       pointer-events: none; /* let clicks go to images/buttons */
     }
 
-    
     #catCanvas {
       z-index: 15;
     }
 
-    
     #foodCanvas {
       z-index: 17
     }
@@ -194,7 +191,7 @@
       width: 100px;
       height: 40px;
 
-      background-image: url("../images/click.png");
+      background-image: url("images/click.png");
       background-repeat: no-repeat;
       background-size: 100% 100%;
       border: none;
@@ -208,7 +205,7 @@
     }
 
     .exeButtons:hover {
-      background-image: url("../images/click.png");
+      background-image: url("images/click.png");
       background-repeat: no-repeat;
       background-size: 100% 100%;
       filter: none;
@@ -275,7 +272,6 @@
       text-align: left;               /* ensure growth is rightward */
     }
 
-
     #cursor {
       animation: blink 1s step-start infinite;
     }
@@ -290,7 +286,7 @@
       right: 35px;
       width: 120px;
       height: 45px;
-      background-image: url("../images/click.png");
+      background-image: url("images/click.png");
       background-size: 100% 100%;
       background-repeat: no-repeat;
       border: none;
@@ -302,7 +298,7 @@
     }
 
     .confirmButton:active {
-      background-image: url("../images/pressed_button.png");
+      background-image: url("images/pressed_button.png");
     }
 
     #leaderText {
@@ -316,10 +312,6 @@
       z-index: 19;
       pointer-events: none;
     }
-
-
-
-
   </style>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
@@ -331,14 +323,15 @@
   <div id="pcLabel">My Computer</div>
   <div id="binLabel">Recycle Bin</div>
 
-  <img id="bgImage" src="../images/feed_my_cat.png" alt="">
-  <img id="exeImage" src="../images/exe.png" alt="">
-  <img id="leaderImage" src="../images/leaderboard.png" alt="">
-  <img id="explorer" src="../images/explorer.png" alt="">
-  <img id="pc" src="../images/pc.png" alt="">
-  <img id="bin" src="../images/bin.png" alt="">
-  <img id="foodImage" src="../images/cat_food.png" alt="">
-  <img id="startbar" src="../images/startbar.png" alt="">
+  <!-- FIXED: all images are in ./images/ -->
+  <img id="bgImage" src="images/feed_my_cat.png" alt="">
+  <img id="exeImage" src="images/exe.png" alt="">
+  <img id="leaderImage" src="images/leaderboard.png" alt="">
+  <img id="explorer" src="images/explorer.png" alt="">
+  <img id="pc" src="images/pc.png" alt="">
+  <img id="bin" src="images/bin.png" alt="">
+  <img id="foodImage" src="images/cat_food.png" alt="">
+  <img id="startbar" src="images/startbar.png" alt="">
 
   <div id="buttons">
     <button id="feedBtn" class="exeButtons">feed</button>
@@ -349,7 +342,7 @@
 
   <!-- NAME ENTRY POPUP -->
   <div id="namePopup">
-    <img id="nameImage" src="../images/name.png" alt="name window">
+    <img id="nameImage" src="images/name.png" alt="name window">
 
     <div id="nameInputWrapper">
       <span id="typedName"></span>
@@ -371,7 +364,6 @@
     <div>total pets: <span id="lbPets">0</span></div>
     <div>total feeds: <span id="lbFeeds">0</span></div>
   </div>
-
 
   <script>
     // ---------------------------------------------------------------
@@ -407,7 +399,6 @@
       // Otherwise do not show popup
       return false;
     }
-
 
     // ---------------------------------------------------------------
     // Scenes & Cameras
@@ -471,9 +462,6 @@
       feedsSpan.textContent = totalFeeds;
     }
 
-    
-
-
     function loadModel(path) {
       return new Promise(resolve => {
         loader.load(path, gltf => resolve(gltf.scene));
@@ -484,7 +472,7 @@
     let catBody = null; // part of cat to fatten
 
     async function initModels() {
-      // Cat
+      // Cat (FIXED: models are next to index.html)
       modelCat = await loadModel("cat.glb");
 
       console.log("CAT MODEL HIERARCHY:");
@@ -504,7 +492,7 @@
         }
       });
 
-      // Food
+      // Food (FIXED: models are next to index.html)
       modelFood = await loadModel("cat_food.glb");
       modelFood.scale.setScalar(0.15);
       modelFood.position.set(0, 0, 0);
@@ -658,7 +646,6 @@
         leaderText.style.top  = rect.top  + rect.height / 2 + "px";
       }
 
-
       // Buttons attached to exeImage
       const exeImg = document.getElementById("exeImage");
       const feedBtn = document.getElementById("feedBtn");
@@ -770,8 +757,9 @@
     // ---------------------------------------------------------------
     // Button press visual state (click.png <-> pressed_button.png)
     // ---------------------------------------------------------------
-    const NORMAL_BG = 'url("../images/click.png")';
-    const PRESSED_BG = 'url("../images/pressed_button.png")';
+    // FIXED: images are in ./images/
+    const NORMAL_BG = 'url("images/click.png")';
+    const PRESSED_BG = 'url("images/pressed_button.png")';
 
     function setupButtonPress(id) {
       const btn = document.getElementById(id);
@@ -802,13 +790,12 @@
       targetCatRotation = baseCatRotationY + xNorm * maxDelta;
     });
 
-// Apply rotation 10 times per second (every 100ms)
-setInterval(() => {
-  if (modelCat) {
-    modelCat.rotation.y = targetCatRotation;
-  }
-}, 100);
-
+    // Apply rotation 10 times per second (every 100ms)
+    setInterval(() => {
+      if (modelCat) {
+        modelCat.rotation.y = targetCatRotation;
+      }
+    }, 100);
 
     // ---------------------------------------------------------------
     // Resize Handler
@@ -886,7 +873,6 @@ setInterval(() => {
       }, 500);
     };
 
-
     document.getElementById("feedBtn").onclick = () => {
       if (catBody) {
         catBody.scale.x *= 1.02;
@@ -897,7 +883,6 @@ setInterval(() => {
       localStorage.setItem("totalFeeds", String(totalFeeds));
       updateLeaderboardDisplay();
     };
-
 
     // ---------------------------------------------------------------
     // Clock
@@ -919,7 +904,6 @@ setInterval(() => {
     // update every second for perfect accuracy
     setInterval(updateClock, 1000);
     updateClock(); // initial
-
 
     // update now & every minute
     updateClock();
@@ -961,7 +945,7 @@ setInterval(() => {
       localStorage.setItem("savedNameDate", today);
 
       const btn = document.getElementById("confirmNameBtn");
-      btn.style.backgroundImage = 'url("../images/pressed_button.png")';
+      btn.style.backgroundImage = 'url("images/pressed_button.png")';
 
       setTimeout(() => {
         document.getElementById("namePopup").remove();
@@ -969,9 +953,7 @@ setInterval(() => {
       }, 500);
     }
 
-
     document.getElementById("confirmNameBtn").addEventListener("click", confirmName);
-
 
     // ---------------------------------------------------------------
     // Start
